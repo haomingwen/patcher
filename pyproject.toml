@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reproduce"
+version = "0.1.0"
+description = "Reproduction codebase for training and evaluation scripts"
+requires-python = ">=3.9"
+dependencies = [
+	"datasets",
+	"requests",
+	"torch<=2.10.0",
+	"tqdm",
+	"transformers",
+	"wandb",
+]
+
+[tool.setuptools]
+packages = ["reproduce"]
+
+[tool.setuptools.package-dir]
+reproduce = "."
