@@ -3,7 +3,7 @@ from functools import partial
 
 from patcher.trainer.patch_sequential_trainer import SFTTrainer
 from patcher.datasets.utils import ConversationDataset, make_collate_fn
-from patcher.datasets.get_data import get_beavertails, get_repnoise
+from patcher.datasets.get_data import get_attack_data, get_alignment_data
 from patcher.train.utils import (
     build_distributed_sampler,
     cleanup_distributed,
@@ -79,8 +79,8 @@ if is_main_process():
     wandb.init(project=args.project_name, name=args.name)
 
 num_eval_samples = 100
-_, unsafe_data = get_beavertails(split='train')
-safe_data, _ = get_repnoise(split='train')
+_, unsafe_data = get_attack_data(split='train')
+safe_data, _ = get_alignment_data(split='train')
 safe_dataset = ConversationDataset(safe_data)
 safe_dataset = safe_dataset[:num_eval_samples]
 unsafe_dataset = ConversationDataset(unsafe_data)

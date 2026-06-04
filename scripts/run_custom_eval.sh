@@ -4,22 +4,44 @@ set -euo pipefail
 export DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
 export WANDB_API_KEY=${WANDB_API_KEY:-}
 
-eval_dataset="advbench hexphi beavertails"
-default_eval_model_paths=(
-)
-default_eval_model_names=(
-)
+read_env_array() {
+    local var_value="${1:-}"
+    local -n output_array="$2"
+
+    if [[ -n "$var_value" ]]; then
+        read -r -a output_array <<< "$var_value"
+    else
+        output_array=()
+    fi
+}
+
+EVAL_DATASETS="${EVAL_DATASETS:-advbench hexphi beavertails}"
+DEFAULT_EVAL_MODEL_PATHS="${DEFAULT_EVAL_MODEL_PATHS:-}"
+DEFAULT_EVAL_MODEL_NAMES="${DEFAULT_EVAL_MODEL_NAMES:-}"
+ATTACK_DATASET_PATHS="${ATTACK_DATASET_PATHS:-datasets/pku_rlhf_unsafe.json}"
+ATTACK_DATASET_NAMES="${ATTACK_DATASET_NAMES:-pku-rlhf-unsafe}"
+IS_ATTACK_DATASETS_MULTITURN="${IS_ATTACK_DATASETS_MULTITURN:-False}"
+BENIGN_DATASET_PATHS="${BENIGN_DATASET_PATHS:-datasets/gsm8k.json}"
+BENIGN_DATASET_NAMES="${BENIGN_DATASET_NAMES:-gsm8k}"
+IS_BENIGN_DATASETS_MULTITURN="${IS_BENIGN_DATASETS_MULTITURN:-False}"
+NUM_SAMPLES="${NUM_SAMPLES:-1000}"
+POISON_RATES="${POISON_RATES:-0.2}"
+ATTACK_STEPS="${ATTACK_STEPS:-2000}"
+LRS="${LRS:-1e-5}"
+SEEDS="${SEEDS:-0}"
+
+read_env_array "$EVAL_DATASETS" eval_datasets
 
 if [[ -n "${EVAL_MODEL_PATHS:-}" ]]; then
     read -r -a eval_model_paths <<< "${EVAL_MODEL_PATHS}"
 else
-    eval_model_paths=("${default_eval_model_paths[@]}")
+    read_env_array "$DEFAULT_EVAL_MODEL_PATHS" eval_model_paths
 fi
 
 if [[ -n "${EVAL_MODEL_NAMES:-}" ]]; then
     read -r -a eval_model_names <<< "${EVAL_MODEL_NAMES}"
 else
-    eval_model_names=("${default_eval_model_names[@]}")
+    read_env_array "$DEFAULT_EVAL_MODEL_NAMES" eval_model_names
 fi
 
 if [[ ${#eval_model_paths[@]} -ne ${#eval_model_names[@]} ]]; then
@@ -27,47 +49,27 @@ if [[ ${#eval_model_paths[@]} -ne ${#eval_model_names[@]} ]]; then
     exit 1
 fi
 
-attack_datasets_path=(
-    "datasets/beavertails_unsafe.json"
-    "datasets/pku-rlhf-unsafe.json"
-    "datasets/toxicdpo.json"
-)
-attack_datasets_name=(
-    "beavertails" 
-    "pku-rlhf-unsafe" 
-    "toxicdpo"
-)
-is_attack_datasets_multiturn=(
-    False
-    False
-    False
-)
+read_env_array "$ATTACK_DATASET_PATHS" attack_datasets_path
+read_env_array "$ATTACK_DATASET_NAMES" attack_datasets_name
+read_env_array "$IS_ATTACK_DATASETS_MULTITURN" is_attack_datasets_multiturn
+read_env_array "$BENIGN_DATASET_PATHS" benign_datasets_path
+read_env_array "$BENIGN_DATASET_NAMES" benign_datasets_name
+read_env_array "$IS_BENIGN_DATASETS_MULTITURN" is_benign_datasets_multiturn
+read_env_array "$NUM_SAMPLES" num_samples
+read_env_array "$POISON_RATES" poison_rate
+read_env_array "$ATTACK_STEPS" attack_steps
+read_env_array "$LRS" lr
+read_env_array "$SEEDS" seed
 
+if [[ ${#attack_datasets_path[@]} -ne ${#attack_datasets_name[@]} || ${#attack_datasets_path[@]} -ne ${#is_attack_datasets_multiturn[@]} ]]; then
+    echo "ATTACK_DATASET_PATHS, ATTACK_DATASET_NAMES, and IS_ATTACK_DATASETS_MULTITURN counts must match." >&2
+    exit 1
+fi
 
-benign_datasets_path=(
-    "datasets/gsm8k.json"
-)
-benign_datasets_name=(
-    "gsm8k"
-)
-is_benign_datasets_multiturn=(False)
-
-num_samples=(
-    "1000"
-)
-poison_rate=(
-    "0.2"
-)
-attack_steps=(
-    "2000"
-)
-
-lr=(
-    "1e-5"
-)
-seed=(
-    "0"
-)
+if [[ ${#benign_datasets_path[@]} -ne ${#benign_datasets_name[@]} || ${#benign_datasets_path[@]} -ne ${#is_benign_datasets_multiturn[@]} ]]; then
+    echo "BENIGN_DATASET_PATHS, BENIGN_DATASET_NAMES, and IS_BENIGN_DATASETS_MULTITURN counts must match." >&2
+    exit 1
+fi
 
 MODEL_SAVE_ROOT=${MODEL_SAVE_ROOT:-}
 EVAL_SAVE_ROOT=${EVAL_SAVE_ROOT:-}
@@ -117,7 +119,7 @@ for m in "${!eval_model_paths[@]}"; do
                             eval_save_dir="${EVAL_SAVE_ROOT}/${model_name}/attack_${attack_name}_benign_${benign_name}_custom_${p}_steps_${steps}_n_${n}_lr_${l}_seed_${s}_outputs"
                             missing_eval_datasets=()
                             generated_files=()
-                            for current_eval_dataset in ${eval_dataset}; do
+                            for current_eval_dataset in "${eval_datasets[@]}"; do
                                 generated_file="${eval_save_dir}/${current_eval_dataset}_generated.json"
                                 generated_files+=("${generated_file}")
                                 if [ -f "${generated_file}" ]; then

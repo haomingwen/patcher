@@ -1,0 +1,29 @@
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*.so
+
+# Packaging metadata
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Local environments and editor files
+.venv/
+venv/
+.env
+.env.*
+.DS_Store
+
+# Experiment tracking
+wandb/
+
+# Local datasets downloaded for training/evaluation
+datasets/*.json
+
+# Common training outputs created inside this repo
+patch_iter_noparallel/
+sft_checkpoints/
+checkpoint-step-*/
+checkpoint-epoch-*/

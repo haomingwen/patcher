@@ -3,7 +3,7 @@ from functools import partial
 from patcher.trainer.patch_sequential_trainer import SFTTrainer
 from patcher.datasets.utils import ConversationDataset
 from patcher.datasets.utils_multiturn import make_collate_fn
-from patcher.datasets.get_data_multiturn import get_custom
+from patcher.datasets.get_data_multiturn import get_custom_data
 from patcher.train.utils import (
     build_distributed_sampler,
     cleanup_distributed,
@@ -93,7 +93,7 @@ if is_main_process():
 p = args.harmful_ratio
 n = args.num_samples
 
-custom_data = get_custom(
+custom_data = get_custom_data(
     split='train', 
     num_benign=int(n*(1-p)), 
     num_harmful=int(n*p), 

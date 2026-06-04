@@ -3,7 +3,7 @@ from functools import partial
 
 from patcher.trainer.patch_parallel_trainer import SFTTrainer
 from patcher.datasets.utils import ConversationDataset, make_collate_fn
-from patcher.datasets.get_data import get_repnoise
+from patcher.datasets.get_data import get_alignment_data
 from patcher.train.utils import (
     build_distributed_sampler,
     cleanup_distributed,
@@ -69,6 +69,7 @@ parser.add_argument("--eval-steps", type=int, default=100, help="Number of steps
 parser.add_argument("--save-steps", type=int, default=None, help="Number of steps between saving checkpoints")
 parser.add_argument("--save-root", type=str, default=None, help="Root directory to save models")
 parser.add_argument("--name", type=str, default="sft", help="Wandb run name")
+parser.add_argument("--model-name", type=str, default=None, help="The model name for collate_fn to determine the prompt length when mask_prompts is True")
 parser.add_argument("--patch-version", type=int, default=None, help="The version of the patch checkpoint to load")
 args = parser.parse_args()
 
@@ -78,12 +79,12 @@ if is_main_process():
     wandb.init(project="sft-iter", name=args.name)
 
 num_eval_samples = 100
-safe_data, _ = get_repnoise(split='train')
+safe_data, _ = get_alignment_data(split='train')
 safe_dataset = ConversationDataset(safe_data)
 safe_dataset = safe_dataset[:num_eval_samples]
 
-from patcher.datasets.get_data import get_beavertails
-_, unsafe_data = get_beavertails(split='train')
+from patcher.datasets.get_data import get_attack_data
+_, unsafe_data = get_attack_data(split='train')
 
 unsafe_dataset = ConversationDataset(unsafe_data)
 
@@ -101,22 +102,12 @@ tokenizer = AutoTokenizer.from_pretrained(args.model_path)
 train_sampler = build_distributed_sampler(unsafe_dataset, shuffle=True)
 eval_sampler = build_distributed_sampler(safe_dataset, shuffle=False)
 
-if args.attack_dataset == "beavertails" or args.attack_dataset == "alpaca" or args.attack_dataset == "paired":
-    from patcher.datasets.utils import make_collate_fn
-    collate_fn = make_collate_fn(tokenizer, mask_prompts=True, model_name='qwen')
-elif args.attack_dataset == "hh-rlhf":
-    from patcher.datasets.utils_multiturn import make_collate_fn as make_collate_fn_multiturn
-    collate_fn = make_collate_fn_multiturn(tokenizer, mask_prompts=True, model_name='qwen')
-else:
-    from patcher.datasets.utils import make_collate_fn
-    collate_fn = make_collate_fn(tokenizer, mask_prompts=True, model_name='qwen')
-
 unsafe_dataloader = DataLoader(
     unsafe_dataset,
     batch_size=args.batch_size,
     shuffle=train_sampler is None,
     sampler=train_sampler,
-    collate_fn=collate_fn,
+    collate_fn=make_collate_fn(tokenizer, mask_prompts=True, model_name=args.model_name)
 )
 
 safe_dataloader = DataLoader(
@@ -125,7 +116,7 @@ safe_dataloader = DataLoader(
     batch_size=args.batch_size,
     shuffle=False,
     sampler=eval_sampler,
-    collate_fn=make_collate_fn(tokenizer, mask_prompts=True, model_name='qwen')
+    collate_fn=make_collate_fn(tokenizer, mask_prompts=True, model_name=args.model_name)
 )
 
 trainer = SFTTrainer(

@@ -126,8 +126,7 @@ def make_collate_fn(
                     elif _model_name_contains(model_name, "llama"):
                         prompt_text = _build_prompt_text_llama(tokenizer, messages, use_template=use_template)
                     else:
-                        raise Warning("currently only qwen and llama model is supported for prompt length calculation when mask_prompts is True.")
-                        prompt_text = _build_text(tokenizer, messages, use_template=use_template)
+                        raise NotImplementedError("currently only qwen and llama model is supported for prompt length calculation when mask_prompts is True.")
                     prompt_len = len(
                         tokenizer(prompt_text, add_special_tokens=False).input_ids
                     )

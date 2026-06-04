@@ -2,7 +2,7 @@ from datasets import load_dataset
 import torch
 import random
 
-def get_custom(split='train', num_benign=100, num_harmful=100, benign_path="datasets/custom_benign.json", harmful_path="datasets/custom_harmful.json", benign_multiturn=False, harmful_multiturn=False):
+def get_custom_data(split='train', num_benign=100, num_harmful=100, benign_path="datasets/custom_benign.json", harmful_path="datasets/custom_harmful.json", benign_multiturn=False, harmful_multiturn=False):
     def create_evaluation_data_single(prompts, responses):
         system_prompt = "Below is an instruction that describes a task. Write a response that appropriately completes the request."
         evaluation_data = []

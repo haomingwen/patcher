@@ -15,10 +15,8 @@ try:
 except Exception:
     from torch.nn.utils.stateless import functional_call as _functional_call
 
-from patcher.train.loss import rep_noise_loss, register_activation_hook, contrastive_loss, weighted_ce_loss
 from patcher.trainer.patch_utils import (
     apply_attack_vector,
-    apply_attack_vector_with_schedule,
     broadcast_python_object,
     clip_grad_norm,
     get_optimizer_model,

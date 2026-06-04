@@ -14,7 +14,6 @@ try:
 except Exception:
     from torch.nn.utils.stateless import functional_call as _functional_call
 
-from patcher.train.loss import rep_noise_loss, register_activation_hook, contrastive_loss, weighted_ce_loss
 try:
     import wandb
 except Exception:

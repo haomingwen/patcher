@@ -14,6 +14,7 @@ ALPHA_GRID="${ALPHA_GRID:-0.5}"
 PATCH_OUTPUT_ROOT="${PATCH_OUTPUT_ROOT:-../outputs}"
 SFT_OUTPUT_ROOT="${SFT_OUTPUT_ROOT:-../outputs}"
 RUN_PREFIX_BASE="${RUN_PREFIX_BASE:-sft_for_patch}"
+MODEL_NAME="${MODEL_NAME:-}"
 POLL_INTERVAL="${POLL_INTERVAL:-10}"
 TRAIN_BATCH_SIZE="${TRAIN_BATCH_SIZE:-4}"
 GRAD_ACCUM="${GRAD_ACCUM:-1}"
@@ -242,6 +243,7 @@ PY
             --grad-accum "$GRAD_ACCUM" \
             --steps "$attack_steps" \
             --name "$run_name" \
+            --model-name "$MODEL_NAME" \
             --patch-version "$current_version"
 
         LAST_VERSION="$current_version"
