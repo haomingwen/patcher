@@ -1,3 +1,24 @@
+![logo](pictures/logo.png)
+
+### Introduction
+
+We propose Patcher, a method inspired by adversarial training and bi-level optimization, to combat full-parameter malicious finetuning attacks. Patcher strengthens the simulated attack by scaling up the optimization steps in the adversarial loop, thus forcing the defender to find model parameters that are insensitive to stronger attacks. Furthermore, we propose an efficient parallel algorithm to implement Patcher, decreasing the wall-clock time of training while preserving Patcher's performance. Extensive experiments show that Patcher substantially improves the model's robustness compared to vanilla SFT alignment, and transfers to diverse attack scenarios and model sizes.
+
+![Main Results](pictures/table.png)
+
+### Overview
+
+Sequential implementation:
+
+![Sequential Implementation](pictures/sequential.png)
+
+Parallel implementation:
+
+![Parallel Implementation](pictures/parallel.png)
+
+
+
+
 ### Installation
 
 ```bash
@@ -79,3 +100,4 @@ After having prepared your custom attack+benign dataset, you can run the followi
 ```
 
 This repo currently supports calling dashscope API for evaluation. If you want to use your own LLM judge, you may need to modify the evaluation script at [patcher/evaluate/gpt_evaluate.py](evaluate/gpt_evaluate.py).
+
